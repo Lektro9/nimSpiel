@@ -1,72 +1,51 @@
 import React, { useState } from 'react';
-import { Box, Container, Button } from '@chakra-ui/react';
-import net from 'net';
+import { Box, Container, Button, Input } from '@chakra-ui/react';
+import Server from './components/Server';
+import Client from './components/Client';
 
-const server = net.createServer(function (socket) {
-  socket.write('Echo server\r\n');
-  socket.on('data', (data) => {
-    console.log(data.toString());
-  });
-});
-
-const startServer = () => {
-  server.listen(1337, '127.0.0.1');
-  console.log('server startet on 1337');
-};
-
-const stopServer = () => {
-  server.close();
-  console.log('server stopped.');
-};
-
-const client = new net.Socket();
-
-client.on('data', (data) => {
-  console.log(`Received: ${data.toString()}`);
-  client.destroy(); // kill client after server's response
-});
-
-const connectToServer = () => {
-  client.connect(1337, '127.0.0.1', () => {
-    console.log('Connected');
-    client.write('Hello, server! Love, Client.');
-  });
-};
+// send message like this: "Name,Message"
 
 const MainScreen = () => {
-  const [hosted, setHosted] = useState(false);
+  const [chat, setChat] = useState([]);
+  const [message, setMessage] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [tcpMessage, setTcpMessage] = useState('');
+
+  const handleMessageInput = (event) => setMessage(event.target.value);
+  const handleNicknameInput = (event) => setNickname(event.target.value);
+
   return (
-    <Container bg="tomato">
-      <Box>Here should be Chat</Box>
+    <Container bg="tomato" p="2">
+      <Input
+        value={nickname}
+        placeholder="Your Nickname"
+        bg="white"
+        onChange={handleNicknameInput}
+        size="sm"
+        mb="2"
+      />
+      <Box height="20" bg="white" border="1px" p="2" overflow="auto">
+        Lorem ipsum is placeholder text commonly used in the graphic, print, and
+        publishing industries for previewing layouts and visual mockups.
+      </Box>
+      <Server messageToSend={tcpMessage} chat={chat} setChat={setChat} />
+      <Client />
+      <Input
+        value={message}
+        placeholder="Chat Input"
+        bg="white"
+        onChange={handleMessageInput}
+        size="sm"
+      />
       <Button
-        disabled={hosted}
-        colorScheme="blue"
-        m="5"
+        colorScheme="green"
+        m="2"
         onClick={() => {
-          startServer();
-          setHosted(true);
+          setTcpMessage(`${nickname},${message}`);
+          setMessage('');
         }}
       >
-        Auf Gegner warten
-      </Button>
-      <Button
-        disabled={!hosted}
-        colorScheme="red"
-        onClick={() => {
-          stopServer();
-          setHosted(false);
-        }}
-      >
-        Server stoppen
-      </Button>
-      <Button
-        colorScheme="blue"
-        m="5"
-        onClick={() => {
-          connectToServer();
-        }}
-      >
-        Gegner suchen
+        send
       </Button>
     </Container>
   );
