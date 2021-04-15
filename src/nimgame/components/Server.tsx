@@ -4,43 +4,51 @@ import net from 'net';
 
 const client = new net.Socket();
 
-const server = net.createServer((socket) => {
-  socket.write('Echo server\r\n');
-  socket.on('data', (data) => {
-    console.log(data.toString());
-  });
-});
-
-const startServer = () => {
-  server.listen(1337, '0.0.0.0');
-  console.log('server startet on 1337');
-};
-
 const connectToServer = () => {
   client.connect(1337, '127.0.0.1', () => {
     console.log('Connected');
   });
 };
 
-const writeMessage = (message) => {
-  client.write(message);
-};
-
-const stopServer = () => {
-  server.close();
-  console.log('server stopped.');
-};
-
 const Server = ({
   messageToSend,
-  chat,
   setChat,
 }: {
-  messageToSend: any;
-  chat: any;
-  setChat: any;
+  messageToSend: string;
+  setChat: React.Dispatch<React.SetStateAction<(string | number)[][]>>;
 }) => {
   const [hosted, setHosted] = useState(false);
+
+  const receiveHandler = (receivedData: string) => {
+    setChat((oldChat) => {
+      const splittedData = receivedData.split(',');
+      return [
+        [splittedData[0], splittedData[1], new Date().getTime()],
+        ...oldChat,
+      ];
+    });
+  };
+
+  const server = net.createServer((socket) => {
+    socket.write('Echo server\r\n');
+    socket.on('data', (data) => {
+      receiveHandler(data.toString());
+    });
+  });
+
+  const startServer = () => {
+    server.listen(1337, '0.0.0.0');
+    console.log('server startet on 1337');
+  };
+
+  const stopServer = () => {
+    server.close();
+    console.log('server stopped.');
+  };
+
+  const writeMessage = (message: string) => {
+    client.write(message);
+  };
 
   useEffect(() => {
     if (hosted) {
